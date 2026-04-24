@@ -1,0 +1,35 @@
+/* 全站壳层：避免 Vite 模板 #app 限制宽度，保证各页全宽科技感布局 */
+#app {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border: none !important;
+  min-height: 100vh;
+  text-align: initial;
+}
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  /* 全局字号 +2（基于 Element Plus 默认体系） */
+  --el-font-size-extra-large: 22px;
+  --el-font-size-large: 20px;
+  --el-font-size-medium: 18px;
+  --el-font-size-base: 16px;
+  --el-font-size-small: 15px;
+  --el-font-size-extra-small: 14px;
+}
+
+/* 全局表格：按列宽显示，默认不换行，超出省略。 */
+.el-table .cell {
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

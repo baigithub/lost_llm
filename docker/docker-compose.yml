@@ -1,0 +1,72 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: lostllm-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: lost_found
+      MYSQL_USER: lost_found
+      MYSQL_PASSWORD: lost_found
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ../backend/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -ppassword --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: lostllm-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: lost_found
+      SECRET_KEY: change-me-use-openssl-rand-hex-32
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      CORS_ORIGINS: '["http://localhost","http://127.0.0.1"]'
+      PUBLIC_BASE_URL: http://localhost
+      UPLOAD_DIR: uploads
+      MAX_UPLOAD_MB: 10
+      LLM_MODE: local
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: qwen2.5-vl:7b
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend-uploads:/app/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    container_name: lostllm-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ../docker/frontend-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  db-data:
+  backend-uploads:
